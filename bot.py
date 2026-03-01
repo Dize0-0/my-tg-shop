@@ -51,7 +51,7 @@ async def cmd_start(message: types.Message):
     # send welcome image from provided Imgur album
     try:
         await bot.send_photo(message.from_user.id,
-                             photo='https://i.imgur.com/UhLPRl2.jpg',
+                             photo='https://i.imgur.com/JChysGL.jpeg',
                              caption='Добро пожаловать в магазин!')
     except Exception:
         pass
