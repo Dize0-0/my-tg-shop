@@ -1,5 +1,6 @@
 import logging
 import os
+import requests
 from aiogram import Bot, Dispatcher, executor, types
 from aiogram.types import ParseMode, InlineKeyboardButton, InlineKeyboardMarkup
 from db import init_db, list_products, get_product, create_order, add_product, get_order, set_order_status
@@ -68,6 +69,8 @@ async def process_category(cb: types.CallbackQuery):
     kb = InlineKeyboardMarkup()
     for pid, title, desc, price in prods:
         kb.add(InlineKeyboardButton(f"{title} — {price}", callback_data=f"buy:{pid}"))
+    # back button
+    kb.add(InlineKeyboardButton('🔙 Назад', callback_data='menu:catalog'))
     await bot.send_message(cb.from_user.id, f'Товары в разделе {category}:', reply_markup=kb)
     await cb.answer()
 
@@ -83,6 +86,8 @@ async def process_buy(cb: types.CallbackQuery):
     for i in range(1, 11):
         kb.insert(InlineKeyboardButton(str(i), callback_data=f'qty:{pid}:{i}'))
     kb.add(InlineKeyboardButton('Свое количество', callback_data=f'qty_custom:{pid}'))
+    # back to category button
+    kb.add(InlineKeyboardButton('🔙 Назад', callback_data=f'cat:{category}'))
     await bot.send_message(cb.from_user.id, f"Вы выбрали: <b>{title}</b>\nЦена за единицу: <b>{price} руб</b>\n{desc}\nВыберите количество:", parse_mode=ParseMode.HTML, reply_markup=kb)
     await cb.answer()
 
@@ -219,6 +224,18 @@ async def cmd_sendlink(message: types.Message):
     _, user_id, product_id, quantity, total_price, payment_link, status, created_at = order
     await bot.send_message(user_id, f'Ссылка для оплаты заказа #{oid}: {link}\nПосле оплаты отправьте чек/ссылку администратору или дождитесь автоматического подтверждения.')
     await message.reply('Ссылка отправлена покупателю')
+
+# admin can trigger the CI webhook to auto-deploy
+@dp.message_handler(commands=['update'])
+async def cmd_update(message: types.Message):
+    if message.from_user.id != ADMIN_ID:
+        return
+    url = 'http://agent.bothost.ru/api/webhooks/github'
+    try:
+        resp = requests.get(url, timeout=10)
+        await message.reply(f'Webhook triggered, status {resp.status_code}')
+    except Exception as e:
+        await message.reply(f'Ошибка при запуске webhook: {e}')
 
 
 @dp.message_handler(commands=['confirm'])
