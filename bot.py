@@ -21,17 +21,21 @@ dp = Dispatcher(bot)
 
 init_db()
 
-# seed database with some example items if completely empty
-# this makes sure users see anything in the catalog on first launch
+# seed database with some example items when a specific category is empty
+# ensures that restarting the bot won't wipe out already existing products
 try:
-    if not list_products():  # no products at all
+    if not list_products('proxy'):
         add_product('🇩🇪 Германия 3 дня', '8.8', 'DEFAULT_CREDENTIALS', 'proxy', 'доступ на 3 дня')
         add_product('🇩🇪 Германия 7 дней', '20', 'DEFAULT_CREDENTIALS', 'proxy', 'доступ на 7 дней')
+    if not list_products('numbers'):
         add_product('🇷🇺 Россия 1 номер', '50', 'NUMBER123', 'numbers', 'мобильный номер')
+    if not list_products('email'):
         add_product('📧 Email VIP', '30', 'mail:pass', 'email', 'быстрый email')
+    if not list_products('tg'):
         add_product('🤖 TG аккаунт', '100', 'tguser:pass', 'tg', 'телеграм-аккаунт')
 except Exception:
     pass  # ignore if something goes wrong during seeding
+# to force reseed in future delete products.db or remove specific rows manually
 
 @dp.message_handler(commands=['start'])
 async def cmd_start(message: types.Message):
