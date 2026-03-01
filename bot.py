@@ -21,6 +21,15 @@ dp = Dispatcher(bot)
 
 init_db()
 
+# add default proxy items if none exist (emoji titles with durations/prices)
+# these will only be inserted once when the DB is empty
+try:
+    if not list_products('proxy'):
+        add_product('🇩🇪 Германия 3 дня', '8.8', 'DEFAULT_CREDENTIALS', 'proxy', 'доступ на 3 дня')
+        add_product('🇩🇪 Германия 7 дней', '20', 'DEFAULT_CREDENTIALS', 'proxy', 'доступ на 7 дней')
+except Exception:
+    pass  # ignore if db functions not available yet or table exists
+
 @dp.message_handler(commands=['start'])
 async def cmd_start(message: types.Message):
     kb = InlineKeyboardMarkup()
