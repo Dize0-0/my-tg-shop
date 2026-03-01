@@ -20,6 +20,14 @@ if not API_TOKEN:
 bot = Bot(token=API_TOKEN)
 dp = Dispatcher(bot)
 
+# human-readable display names for categories with icons
+CAT_NAMES = {
+    'proxy': '🌐 Прокси',
+    'numbers': '📱 Вирт номера',
+    'tg': '🤖 T3 аккаунты',
+    'email': '✉️ Email'
+}
+
 init_db()
 
 # seed database with some example items when a specific category is empty
@@ -33,7 +41,7 @@ try:
     if not list_products('email'):
         add_product('📧 Email VIP', '30', 'mail:pass', 'email', 'быстрый email')
     if not list_products('tg'):
-        add_product('🤖 TG аккаунт', '100', 'tguser:pass', 'tg', 'телеграм-аккаунт')
+        add_product('🤖 T3 аккаунт', '100', 'tguser:pass', 'tg', 'телеграм-аккаунт')
 except Exception:
     pass  # ignore if something goes wrong during seeding
 # to force reseed in future delete products.db or remove specific rows manually
@@ -73,10 +81,11 @@ async def process_category(cb: types.CallbackQuery):
         return
     kb = InlineKeyboardMarkup()
     for pid, title, desc, price in prods:
-        kb.add(InlineKeyboardButton(f"{title} — {price}", callback_data=f"buy:{pid}"))
+        kb.add(InlineKeyboardButton(f"{title} — {price} ₽", callback_data=f"buy:{pid}"))
     # back button
     kb.add(InlineKeyboardButton('🔙 Назад', callback_data='menu:catalog'))
-    await bot.send_message(cb.from_user.id, f'Товары в разделе {category}:', reply_markup=kb)
+    display = CAT_NAMES.get(category, category)
+    await bot.send_message(cb.from_user.id, f'Товары в разделе {display}:', reply_markup=kb)
     await cb.answer()
 
 @dp.callback_query_handler(lambda c: c.data and c.data.startswith('buy:'))
@@ -115,10 +124,11 @@ async def process_menu(cb: types.CallbackQuery):
     if choice == 'catalog':
         # reuse start logic to show category buttons
         kb = InlineKeyboardMarkup()
-        kb.add(InlineKeyboardButton('Прокси', callback_data='cat:proxy'))
-        kb.add(InlineKeyboardButton('Номера', callback_data='cat:numbers'))
-        kb.add(InlineKeyboardButton('TG аккаунты', callback_data='cat:tg'))
-        kb.add(InlineKeyboardButton('Почты', callback_data='cat:email'))
+        # use pretty names
+        kb.add(InlineKeyboardButton(CAT_NAMES['proxy'], callback_data='cat:proxy'))
+        kb.add(InlineKeyboardButton(CAT_NAMES['numbers'], callback_data='cat:numbers'))
+        kb.add(InlineKeyboardButton(CAT_NAMES['tg'], callback_data='cat:tg'))
+        kb.add(InlineKeyboardButton(CAT_NAMES['email'], callback_data='cat:email'))
         kb.add(InlineKeyboardButton('🔙 Назад', callback_data='menu:main'))
         await bot.send_message(cb.from_user.id, 'Выберите раздел:', reply_markup=kb)
     elif choice == 'main':
