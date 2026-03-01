@@ -119,7 +119,11 @@ async def process_menu(cb: types.CallbackQuery):
         kb.add(InlineKeyboardButton('Номера', callback_data='cat:numbers'))
         kb.add(InlineKeyboardButton('TG аккаунты', callback_data='cat:tg'))
         kb.add(InlineKeyboardButton('Почты', callback_data='cat:email'))
+        kb.add(InlineKeyboardButton('🔙 Назад', callback_data='menu:main'))
         await bot.send_message(cb.from_user.id, 'Выберите раздел:', reply_markup=kb)
+    elif choice == 'main':
+        # show main menu again
+        await cmd_start(cb.message)
     elif choice == 'profile':
         await bot.send_message(cb.from_user.id, f'Ваш ID: {cb.from_user.id}\nБаланс: 0 руб (пока не реализовано)')
     elif choice == 'topup':
