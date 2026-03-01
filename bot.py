@@ -39,11 +39,20 @@ except Exception:
 
 @dp.message_handler(commands=['start'])
 async def cmd_start(message: types.Message):
+    # send welcome image from provided Imgur album
+    try:
+        await bot.send_photo(message.from_user.id,
+                             photo='https://i.imgur.com/UhLPRl2.jpg',
+                             caption='Добро пожаловать в магазин!')
+    except Exception:
+        pass
+    # layout: catalog left, profile right; top-up full-width below; support bottom left, agreement bottom right
     kb = InlineKeyboardMarkup(row_width=2)
-    kb.add(InlineKeyboardButton('📦 Каталог', callback_data='menu:catalog'))
-    kb.add(InlineKeyboardButton('👤 Профиль', callback_data='menu:profile'))
-    kb.add(InlineKeyboardButton('💰 Пополнить баланс', callback_data='menu:topup'))
-    kb.add(InlineKeyboardButton('📩 Техподдержка', callback_data='menu:support'))
+    kb.add(InlineKeyboardButton('📦 Каталог', callback_data='menu:catalog'),
+           InlineKeyboardButton('👤 Профиль', callback_data='menu:profile'))
+    kb.row(InlineKeyboardButton('💰 Пополнить баланс', callback_data='menu:topup'))
+    kb.add(InlineKeyboardButton('📩 Техподдержка', callback_data='menu:support'),
+           InlineKeyboardButton('📄 Польз. соглашение', callback_data='menu:agreement'))
     await message.answer('Главное меню:', reply_markup=kb)
 
 
@@ -99,6 +108,8 @@ async def process_menu(cb: types.CallbackQuery):
         await bot.send_message(cb.from_user.id, 'Чтобы пополнить баланс, обратитесь к администратору.')
     elif choice == 'support':
         await bot.send_message(cb.from_user.id, 'Техподдержка: @your_support_username')
+    elif choice == 'agreement':
+        await bot.send_message(cb.from_user.id, 'Пользовательское соглашение: https://example.com/agreement')
     await cb.answer()
 
 @dp.message_handler(commands=['addproduct'])
