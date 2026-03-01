@@ -59,6 +59,11 @@ async def cmd_start(message: types.Message):
 
 @dp.callback_query_handler(lambda c: c.data and c.data.startswith('cat:'))
 async def process_category(cb: types.CallbackQuery):
+    # remove the previous message with buttons
+    try:
+        await cb.message.delete()
+    except Exception:
+        pass
     category = cb.data.split(':', 1)[1]
     # fetch products for category
     prods = list_products(category)
@@ -76,6 +81,10 @@ async def process_category(cb: types.CallbackQuery):
 
 @dp.callback_query_handler(lambda c: c.data and c.data.startswith('buy:'))
 async def process_buy(cb: types.CallbackQuery):
+    try:
+        await cb.message.delete()
+    except Exception:
+        pass
     pid = int(cb.data.split(':', 1)[1])
     prod = get_product(pid)
     if not prod:
@@ -98,6 +107,10 @@ def handle_menu(cb: types.CallbackQuery):
 
 @dp.callback_query_handler(handle_menu)
 async def process_menu(cb: types.CallbackQuery):
+    try:
+        await cb.message.delete()
+    except Exception:
+        pass
     choice = cb.data.split(':',1)[1]
     if choice == 'catalog':
         # reuse start logic to show category buttons
@@ -144,6 +157,10 @@ async def cmd_addproduct(message: types.Message):
 
 @dp.callback_query_handler(lambda c: c.data and c.data.startswith('qty:'))
 async def process_qty(cb: types.CallbackQuery):
+    try:
+        await cb.message.delete()
+    except Exception:
+        pass
     _, pid_str, qty_str = cb.data.split(':')
     pid = int(pid_str)
     qty = int(qty_str)
@@ -160,6 +177,10 @@ async def process_qty(cb: types.CallbackQuery):
 
 @dp.callback_query_handler(lambda c: c.data and c.data.startswith('qty_custom:'))
 async def process_qty_custom(cb: types.CallbackQuery):
+    try:
+        await cb.message.delete()
+    except Exception:
+        pass
     pid = int(cb.data.split(':', 1)[1])
     await bot.send_message(cb.from_user.id, 'Отправьте желаемое количество (число).')
     await cb.answer()
