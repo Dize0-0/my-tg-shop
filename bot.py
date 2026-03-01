@@ -21,24 +21,26 @@ dp = Dispatcher(bot)
 
 init_db()
 
-# add default proxy items if none exist (emoji titles with durations/prices)
-# these will only be inserted once when the DB is empty
+# seed database with some example items if completely empty
+# this makes sure users see anything in the catalog on first launch
 try:
-    if not list_products('proxy'):
+    if not list_products():  # no products at all
         add_product('🇩🇪 Германия 3 дня', '8.8', 'DEFAULT_CREDENTIALS', 'proxy', 'доступ на 3 дня')
         add_product('🇩🇪 Германия 7 дней', '20', 'DEFAULT_CREDENTIALS', 'proxy', 'доступ на 7 дней')
+        add_product('🇷🇺 Россия 1 номер', '50', 'NUMBER123', 'numbers', 'мобильный номер')
+        add_product('📧 Email VIP', '30', 'mail:pass', 'email', 'быстрый email')
+        add_product('🤖 TG аккаунт', '100', 'tguser:pass', 'tg', 'телеграм-аккаунт')
 except Exception:
-    pass  # ignore if db functions not available yet or table exists
+    pass  # ignore if something goes wrong during seeding
 
 @dp.message_handler(commands=['start'])
 async def cmd_start(message: types.Message):
-    kb = InlineKeyboardMarkup()
-    # show categories
-    kb.add(InlineKeyboardButton('Прокси', callback_data='cat:proxy'))
-    kb.add(InlineKeyboardButton('Номера', callback_data='numbers'))
-    kb.add(InlineKeyboardButton('TG аккаунты', callback_data='tg'))
-    kb.add(InlineKeyboardButton('Почты', callback_data='email'))
-    await message.answer('Выберите раздел:', reply_markup=kb)
+    kb = InlineKeyboardMarkup(row_width=2)
+    kb.add(InlineKeyboardButton('📦 Каталог', callback_data='menu:catalog'))
+    kb.add(InlineKeyboardButton('👤 Профиль', callback_data='menu:profile'))
+    kb.add(InlineKeyboardButton('💰 Пополнить баланс', callback_data='menu:topup'))
+    kb.add(InlineKeyboardButton('📩 Техподдержка', callback_data='menu:support'))
+    await message.answer('Главное меню:', reply_markup=kb)
 
 
 @dp.callback_query_handler(lambda c: c.data and c.data.startswith('cat:'))
@@ -63,14 +65,36 @@ async def process_buy(cb: types.CallbackQuery):
     if not prod:
         await cb.answer('Товар не найден', show_alert=True)
         return
-    # now prod includes category
     _, title, desc, price, _, category = prod
-    # Show quantity options 1..10 and custom
     kb = InlineKeyboardMarkup(row_width=5)
     for i in range(1, 11):
         kb.insert(InlineKeyboardButton(str(i), callback_data=f'qty:{pid}:{i}'))
     kb.add(InlineKeyboardButton('Свое количество', callback_data=f'qty_custom:{pid}'))
-    await bot.send_message(cb.from_user.id, f"Вы выбрали: <b>{title}</b>\nЦена за единицу: <b>{price} руб</b>\nВыберите количество:", parse_mode=ParseMode.HTML, reply_markup=kb)
+    await bot.send_message(cb.from_user.id, f"Вы выбрали: <b>{title}</b>\nЦена за единицу: <b>{price} руб</b>\n{desc}\nВыберите количество:", parse_mode=ParseMode.HTML, reply_markup=kb)
+    await cb.answer()
+
+
+# new menu callback handler
+def handle_menu(cb: types.CallbackQuery):
+    return cb.data and cb.data.startswith('menu:')
+
+@dp.callback_query_handler(handle_menu)
+async def process_menu(cb: types.CallbackQuery):
+    choice = cb.data.split(':',1)[1]
+    if choice == 'catalog':
+        # reuse start logic to show category buttons
+        kb = InlineKeyboardMarkup()
+        kb.add(InlineKeyboardButton('Прокси', callback_data='cat:proxy'))
+        kb.add(InlineKeyboardButton('Номера', callback_data='cat:numbers'))
+        kb.add(InlineKeyboardButton('TG аккаунты', callback_data='cat:tg'))
+        kb.add(InlineKeyboardButton('Почты', callback_data='cat:email'))
+        await bot.send_message(cb.from_user.id, 'Выберите раздел:', reply_markup=kb)
+    elif choice == 'profile':
+        await bot.send_message(cb.from_user.id, f'Ваш ID: {cb.from_user.id}\nБаланс: 0 руб (пока не реализовано)')
+    elif choice == 'topup':
+        await bot.send_message(cb.from_user.id, 'Чтобы пополнить баланс, обратитесь к администратору.')
+    elif choice == 'support':
+        await bot.send_message(cb.from_user.id, 'Техподдержка: @your_support_username')
     await cb.answer()
 
 @dp.message_handler(commands=['addproduct'])
@@ -95,6 +119,8 @@ async def cmd_addproduct(message: types.Message):
     pid = add_product(title, price, credentials, category, description)
     await message.reply(f'Товар добавлен, id={pid} (цена зафиксирована 100 руб)')
 
+
+# existing handlers remain unchanged below
 
 @dp.callback_query_handler(lambda c: c.data and c.data.startswith('qty:'))
 async def process_qty(cb: types.CallbackQuery):
