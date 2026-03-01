@@ -23,9 +23,9 @@ dp = Dispatcher(bot)
 # human-readable display names for categories with icons
 CAT_NAMES = {
     'proxy': '🌐 Прокси',
-    'numbers': '📱 Вирт номера',
-    'tg': '🤖 T3 аккаунты',
-    'email': '✉️ Email'
+    'numbers': '📱 Номера',
+    'tg': '🤖 TG акк',
+    'email': '✉️ Почта'
 }
 
 init_db()
@@ -37,11 +37,11 @@ try:
         add_product('🇩🇪 Германия 3 дня', '8.8', 'DEFAULT_CREDENTIALS', 'proxy', 'доступ на 3 дня')
         add_product('🇩🇪 Германия 7 дней', '20', 'DEFAULT_CREDENTIALS', 'proxy', 'доступ на 7 дней')
     if not list_products('numbers'):
-        add_product('🇷🇺 Россия 1 номер', '50', 'NUMBER123', 'numbers', 'мобильный номер')
+        add_product('📱 Вирт номер РФ', '50', 'NUMBER123', 'numbers', 'мобильный номер')
     if not list_products('email'):
-        add_product('📧 Email VIP', '30', 'mail:pass', 'email', 'быстрый email')
+        add_product('✉️ Почта VIP', '30', 'mail:pass', 'email', 'быстрый email')
     if not list_products('tg'):
-        add_product('🤖 T3 аккаунт', '100', 'tguser:pass', 'tg', 'телеграм-аккаунт')
+        add_product('🤖 TG акк', '100', 'tguser:pass', 'tg', 'телеграм-акк')
 except Exception:
     pass  # ignore if something goes wrong during seeding
 # to force reseed in future delete products.db or remove specific rows manually
