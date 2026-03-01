@@ -7,9 +7,11 @@ from db import set_payment_link, confirm_order_paid
 
 logging.basicConfig(level=logging.INFO)
 
-API_TOKEN = os.getenv('TG_BOT_TOKEN')
+# bot token can be provided via environment or hardcoded default below
+# WARNING: hardcoding the token is insecure. Prefer setting TG_BOT_TOKEN in env.
+API_TOKEN = os.getenv('TG_BOT_TOKEN', '8706625605:AAG3IF-ODZ4-FsqVVtkaDuKtP0LcjqsDpLI')
 # default admin id set to provided value if env not set
-ADMIN_ID = int(os.getenv('ADMIN_ID', '8594771951'))
+ADMIN_ID = int(os.getenv('ADMIN_ID', '8594771951'))  # ваш ID как админа
 
 if not API_TOKEN:
     raise SystemExit('Set TG_BOT_TOKEN env var')
