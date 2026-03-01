@@ -31,6 +31,18 @@ def init_db():
     conn.commit()
     conn.close()
 
+    # additionally keep track of user balances
+    conn = sqlite3.connect(DB_PATH)
+    cur = conn.cursor()
+    cur.execute('''
+    CREATE TABLE IF NOT EXISTS users (
+        user_id INTEGER PRIMARY KEY,
+        balance REAL NOT NULL DEFAULT 0
+    )
+    ''')
+    conn.commit()
+    conn.close()
+
 def add_product(title: str, price: str, credentials: str, category: str, description: str = '') -> int:
     conn = sqlite3.connect(DB_PATH)
     cur = conn.cursor()
@@ -96,5 +108,25 @@ def set_order_status(oid: int, status: str):
     conn = sqlite3.connect(DB_PATH)
     cur = conn.cursor()
     cur.execute('UPDATE orders SET status = ? WHERE id = ?', (status, oid))
+    conn.commit()
+    conn.close()
+
+# user balance helpers
+
+def get_balance(user_id: int) -> float:
+    conn = sqlite3.connect(DB_PATH)
+    cur = conn.cursor()
+    cur.execute('SELECT balance FROM users WHERE user_id = ?', (user_id,))
+    row = cur.fetchone()
+    conn.close()
+    return row[0] if row else 0.0
+
+def change_balance(user_id: int, amount: float):
+    conn = sqlite3.connect(DB_PATH)
+    cur = conn.cursor()
+    cur.execute('INSERT OR IGNORE INTO users (user_id, balance) VALUES (?, ?)',
+                (user_id, 0.0))
+    cur.execute('UPDATE users SET balance = balance + ? WHERE user_id = ?',
+                (amount, user_id))
     conn.commit()
     conn.close()

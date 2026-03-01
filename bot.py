@@ -4,7 +4,7 @@ import requests
 from aiogram import Bot, Dispatcher, executor, types
 from aiogram.types import ParseMode, InlineKeyboardButton, InlineKeyboardMarkup
 from db import init_db, list_products, get_product, create_order, add_product, get_order, set_order_status
-from db import set_payment_link, confirm_order_paid
+from db import set_payment_link, confirm_order_paid, get_balance, change_balance
 
 logging.basicConfig(level=logging.INFO)
 
@@ -125,7 +125,8 @@ async def process_menu(cb: types.CallbackQuery):
         # show main menu again
         await cmd_start(cb.message)
     elif choice == 'profile':
-        await bot.send_message(cb.from_user.id, f'Ваш ID: {cb.from_user.id}\nБаланс: 0 руб (пока не реализовано)')
+        bal = get_balance(cb.from_user.id)
+        await bot.send_message(cb.from_user.id, f'Ваш ID: {cb.from_user.id}\nБаланс: {bal} руб')
     elif choice == 'topup':
         await bot.send_message(cb.from_user.id, 'Чтобы пополнить баланс, обратитесь к администратору.')
     elif choice == 'support':
@@ -268,6 +269,24 @@ async def cmd_update(message: types.Message):
     except Exception as e:
         await message.reply(f'Ошибка при запуске webhook: {e}')
 
+# admin command to modify user balance: /addbalance <user_id> <amount>
+@dp.message_handler(commands=['addbalance'])
+async def cmd_addbalance(message: types.Message):
+    if message.from_user.id != ADMIN_ID:
+        await message.reply('Только админ')
+        return
+    parts = message.get_args().split()
+    if len(parts) != 2:
+        await message.reply('Использование: /addbalance <user_id> <amount>')
+        return
+    try:
+        uid = int(parts[0])
+        amt = float(parts[1])
+    except ValueError:
+        await message.reply('Неверный формат')
+        return
+    change_balance(uid, amt)
+    await message.reply(f'Баланс пользователя {uid} изменён на {amt} рублей')
 
 @dp.message_handler(commands=['confirm'])
 async def cmd_confirm(message: types.Message):
