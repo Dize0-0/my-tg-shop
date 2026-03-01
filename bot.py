@@ -172,9 +172,15 @@ async def process_qty(cb: types.CallbackQuery):
     if not prod:
         await cb.answer('Товар не найден', show_alert=True)
         return
-    _, title, desc, price, _, category = prod
+    _, title, desc, price, credentials, category = prod
     total = float(price) * qty
     oid = create_order(cb.from_user.id, pid, qty, total)
+    # if product is email, deliver immediately without waiting for admin
+    if category == 'email':
+        set_order_status(oid, 'delivered')
+        await bot.send_message(cb.from_user.id, f"Заказ #{oid} автоматически доставлен.\nДанные: {credentials}")
+        await cb.answer('Заказ создан и доставлен')
+        return
     await bot.send_message(cb.from_user.id, f"Создан заказ #{oid}\nТовар: {title}\nКол-во: {qty}\nСумма: {total} руб\nПеред покупкой пополните баланс. Админ пришлёт ссылку для оплаты.")
     await cb.answer('Заказ создан')
 
